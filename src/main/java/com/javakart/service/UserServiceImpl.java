@@ -17,8 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -38,6 +38,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private EmailService emailService;
     
     @Override
     public UserDTO registerUser(UserDTO userDTO) {
@@ -65,6 +68,14 @@ public class UserServiceImpl implements UserService {
         
         User savedUser = userRepository.save(user);
         cartRepository.save(cart);
+        
+        // Send welcome email
+        try {
+            emailService.sendRegistrationEmail(savedUser.getEmail(), savedUser.getFullName());
+        } catch (Exception e) {
+            // Log error but don't fail registration
+            System.err.println("Failed to send registration email: " + e.getMessage());
+        }
         
         // Return DTO
         return convertToDTO(savedUser);
@@ -118,6 +129,7 @@ public class UserServiceImpl implements UserService {
         dto.setMobile(user.getMobile());
         dto.setFullName(user.getFullName());
         dto.setRole(user.getRole().name());
+        dto.setPassword(""); // Don't expose password
         return dto;
     }
     
@@ -126,8 +138,19 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         
-        user.setMobile(userDTO.getMobile());
-        user.setFullName(userDTO.getFullName());
+        // Update allowed fields only
+        if (userDTO.getMobile() != null && !userDTO.getMobile().isEmpty()) {
+            user.setMobile(userDTO.getMobile());
+        }
+        
+        if (userDTO.getFullName() != null && !userDTO.getFullName().isEmpty()) {
+            user.setFullName(userDTO.getFullName());
+        }
+        
+        // Password update (if provided)
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        }
         
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
@@ -150,5 +173,34 @@ public class UserServiceImpl implements UserService {
         String username = authentication.getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+    
+    // Admin methods
+    @Override
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public UserDTO blockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        
+        user.setIsActive(false);
+        User blockedUser = userRepository.save(user);
+        return convertToDTO(blockedUser);
+    }
+    
+    @Override
+    public UserDTO unblockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        
+        user.setIsActive(true);
+        User unblockedUser = userRepository.save(user);
+        return convertToDTO(unblockedUser);
     }
 }

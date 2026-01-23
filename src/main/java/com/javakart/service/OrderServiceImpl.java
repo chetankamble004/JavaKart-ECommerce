@@ -145,6 +145,14 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Override
+    public List<OrderDTO> getAllOrders() {
+        return orderRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
     public List<OrderDTO> getOrdersByUser(Long userId) {
         return orderRepository.findByUser_UserId(userId)
                 .stream()

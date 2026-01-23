@@ -1,7 +1,9 @@
 package com.javakart.controller;
 
+import com.javakart.dto.OrderDTO;
 import com.javakart.dto.ProductDTO;
 import com.javakart.dto.UserDTO;
+import com.javakart.service.OrderService;
 import com.javakart.service.ProductService;
 import com.javakart.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class AdminController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private OrderService orderService;
     
     // Product Management
     @PostMapping("/products")
@@ -44,20 +49,51 @@ public class AdminController {
     // User Management
     @GetMapping("/users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
-        // Implementation for getting all users
-        // This would require adding a method in UserService
-        return ResponseEntity.ok().build();
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+    
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+        UserDTO user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
     }
     
     @PutMapping("/users/{userId}/block")
-    public ResponseEntity<Void> blockUser(@PathVariable Long userId) {
-        // Implementation for blocking user
-        return ResponseEntity.ok().build();
+    public ResponseEntity<UserDTO> blockUser(@PathVariable Long userId) {
+        UserDTO blockedUser = userService.blockUser(userId);
+        return ResponseEntity.ok(blockedUser);
     }
     
     @PutMapping("/users/{userId}/unblock")
-    public ResponseEntity<Void> unblockUser(@PathVariable Long userId) {
-        // Implementation for unblocking user
+    public ResponseEntity<UserDTO> unblockUser(@PathVariable Long userId) {
+        UserDTO unblockedUser = userService.unblockUser(userId);
+        return ResponseEntity.ok(unblockedUser);
+    }
+    
+    // Order Management for Admin
+    @GetMapping("/orders")
+    public ResponseEntity<List<OrderDTO>> getAllOrders() {
+        // This needs a new method in OrderService to get all orders
+        return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/orders/user/{userId}")
+    public ResponseEntity<List<OrderDTO>> getOrdersByUser(@PathVariable Long userId) {
+        List<OrderDTO> orders = orderService.getOrdersByUser(userId);
+        return ResponseEntity.ok(orders);
+    }
+    
+    @PutMapping("/orders/{orderId}/status")
+    public ResponseEntity<OrderDTO> updateOrderStatus(@PathVariable Long orderId, @RequestParam String status) {
+        OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, status);
+        return ResponseEntity.ok(updatedOrder);
+    }
+    
+    // Dashboard Stats
+    @GetMapping("/stats")
+    public ResponseEntity<?> getDashboardStats() {
+        // Return basic stats
         return ResponseEntity.ok().build();
     }
 }

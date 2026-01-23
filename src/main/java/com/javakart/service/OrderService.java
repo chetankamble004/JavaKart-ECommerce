@@ -10,4 +10,7 @@ public interface OrderService {
     OrderDTO updateOrderStatus(Long orderId, String status);
     OrderDTO cancelOrder(Long orderId);
     List<OrderDTO> getOrdersByUser(Long userId);
+    
+    // New method for Admin to get all orders
+    List<OrderDTO> getAllOrders();
 }
