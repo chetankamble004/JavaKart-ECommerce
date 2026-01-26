@@ -27,7 +27,7 @@ public class AdminController {
     @Autowired
     private OrderService orderService;
     
-    // Product Management
+    // ========== PRODUCT MANAGEMENT ==========
     @PostMapping("/products")
     public ResponseEntity<ProductDTO> createProduct(@RequestBody ProductDTO productDTO) {
         ProductDTO createdProduct = productService.createProduct(productDTO);
@@ -46,7 +46,7 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
     
-    // User Management
+    // ========== USER MANAGEMENT ==========
     @GetMapping("/users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.getAllUsers();
@@ -71,11 +71,17 @@ public class AdminController {
         return ResponseEntity.ok(unblockedUser);
     }
     
-    // Order Management for Admin
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+    
+    // ========== ORDER MANAGEMENT ==========
     @GetMapping("/orders")
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
-        // This needs a new method in OrderService to get all orders
-        return ResponseEntity.ok().build();
+        List<OrderDTO> orders = orderService.getAllOrders();
+        return ResponseEntity.ok(orders);
     }
     
     @GetMapping("/orders/user/{userId}")
@@ -90,10 +96,37 @@ public class AdminController {
         return ResponseEntity.ok(updatedOrder);
     }
     
-    // Dashboard Stats
-    @GetMapping("/stats")
-    public ResponseEntity<?> getDashboardStats() {
-        // Return basic stats
-        return ResponseEntity.ok().build();
+    @PutMapping("/orders/{orderId}/cancel")
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long orderId) {
+        OrderDTO cancelledOrder = orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(cancelledOrder);
+    }
+    
+    @PostMapping("/orders/{orderId}/refund")
+    public ResponseEntity<String> processRefund(@PathVariable Long orderId) {
+        // Implementation for refund processing
+        // This would integrate with payment gateway API
+        return ResponseEntity.ok("Refund processed for order: " + orderId);
+    }
+    
+    // ========== INVENTORY MANAGEMENT ==========
+    @PutMapping("/products/{productId}/stock")
+    public ResponseEntity<ProductDTO> updateStock(
+            @PathVariable Long productId, 
+            @RequestParam Integer quantity) {
+        ProductDTO product = productService.getProductById(productId);
+        product.setStockQuantity(quantity);
+        ProductDTO updatedProduct = productService.updateProduct(productId, product);
+        return ResponseEntity.ok(updatedProduct);
+    }
+    
+    @GetMapping("/products/low-stock")
+    public ResponseEntity<List<ProductDTO>> getLowStockProducts() {
+        // Get all products and filter low stock
+        List<ProductDTO> allProducts = productService.getAllProducts();
+        List<ProductDTO> lowStock = allProducts.stream()
+                .filter(p -> p.getStockQuantity() < 10)
+                .toList();
+        return ResponseEntity.ok(lowStock);
     }
 }

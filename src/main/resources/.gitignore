@@ -1,0 +1,45 @@
+# Application Properties
+src/main/resources/application.properties
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Build files
+target/
+build/
+out/
+bin/
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+
+# Uploads directory
+uploads/
+
+# Database files
+*.db
+*.sqlite
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

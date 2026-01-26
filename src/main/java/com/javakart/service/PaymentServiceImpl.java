@@ -6,12 +6,14 @@ import com.javakart.entity.Payment;
 import com.javakart.exception.InvalidOrderException;
 import com.javakart.repository.OrderRepository;
 import com.javakart.repository.PaymentRepository;
+import com.razorpay.RazorpayException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,6 +29,15 @@ public class PaymentServiceImpl implements PaymentService {
     
     @Autowired
     private EmailService emailService;
+    
+    @Autowired
+    private SMSService smsService;
+    
+    @Autowired
+    private RazorpayService razorpayService;
+    
+    @Autowired
+    private InvoiceService invoiceService;
     
     @Override
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
@@ -48,6 +59,19 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentDate(LocalDateTime.now());
         
         Payment savedPayment = paymentRepository.save(payment);
+        
+        // If online payment, create Razorpay order
+        if ("ONLINE".equals(paymentDTO.getPaymentMethod())) {
+            try {
+                PaymentDTO razorpayResponse = razorpayService.createRazorpayOrder(paymentDTO);
+                savedPayment.setTransactionId(razorpayResponse.getTransactionId());
+                paymentRepository.save(savedPayment);
+                return razorpayResponse;
+            } catch (RazorpayException e) {
+                throw new RuntimeException("Failed to create Razorpay order: " + e.getMessage());
+            }
+        }
+        
         return convertToDTO(savedPayment);
     }
     
@@ -55,9 +79,21 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDTO verifyPayment(Map<String, String> paymentData) {
         String transactionId = paymentData.get("transactionId");
         String status = paymentData.get("status");
+        String razorpayPaymentId = paymentData.get("razorpay_payment_id");
+        String razorpaySignature = paymentData.get("razorpay_signature");
         
         Payment payment = paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
+        
+        // Verify Razorpay signature for online payments
+        if ("ONLINE".equals(payment.getPaymentMethod())) {
+            boolean isValid = razorpayService.verifyPayment(transactionId, razorpayPaymentId, razorpaySignature);
+            if (!isValid) {
+                payment.setPaymentStatus("FAILED");
+                paymentRepository.save(payment);
+                throw new RuntimeException("Payment verification failed");
+            }
+        }
         
         if ("SUCCESS".equals(status)) {
             payment.setPaymentStatus("SUCCESS");
@@ -66,6 +102,13 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = payment.getOrder();
             order.setOrderStatus("PROCESSING");
             orderRepository.save(order);
+            
+            // Generate invoice
+            try {
+                invoiceService.generateInvoice(order.getOrderId());
+            } catch (Exception e) {
+                System.err.println("Failed to generate invoice: " + e.getMessage());
+            }
             
             // Send confirmation email
             try {
@@ -76,8 +119,18 @@ public class PaymentServiceImpl implements PaymentService {
                     order.getTotalAmount().doubleValue()
                 );
             } catch (Exception e) {
-                // Log error but don't fail payment
                 System.err.println("Failed to send email: " + e.getMessage());
+            }
+            
+            // Send SMS notification
+            try {
+                smsService.sendOrderConfirmationSMS(
+                    order.getUser().getMobile(),
+                    order.getOrderId(),
+                    order.getTotalAmount().doubleValue()
+                );
+            } catch (Exception e) {
+                System.err.println("Failed to send SMS: " + e.getMessage());
             }
         } else {
             payment.setPaymentStatus("FAILED");
@@ -115,20 +168,55 @@ public class PaymentServiceImpl implements PaymentService {
             order.setOrderStatus("PROCESSING");
             orderRepository.save(order);
             
+            // Generate invoice for COD
+            try {
+                invoiceService.generateInvoice(order.getOrderId());
+            } catch (Exception e) {
+                System.err.println("Failed to generate invoice: " + e.getMessage());
+            }
+            
+            // Send notifications
+            sendPaymentNotifications(order, "COD");
+            
             return convertToDTO(savedPayment);
         }
         
-        // For online payments, create pending payment
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setAmount(order.getTotalAmount());
-        payment.setPaymentMethod(paymentMethod);
-        payment.setPaymentStatus("PENDING");
-        payment.setTransactionId(generateTransactionId());
-        payment.setPaymentDate(LocalDateTime.now());
+        // For online payments
+        if ("ONLINE".equals(paymentMethod)) {
+            PaymentDTO paymentDTO = new PaymentDTO();
+            paymentDTO.setOrderId(orderId);
+            paymentDTO.setAmount(order.getTotalAmount());
+            paymentDTO.setPaymentMethod("ONLINE");
+            
+            return createPayment(paymentDTO);
+        }
         
-        Payment savedPayment = paymentRepository.save(payment);
-        return convertToDTO(savedPayment);
+        throw new RuntimeException("Invalid payment method");
+    }
+    
+    private void sendPaymentNotifications(Order order, String paymentMethod) {
+        // Email
+        try {
+            emailService.sendOrderConfirmationEmail(
+                order.getUser().getEmail(),
+                order.getUser().getFullName(),
+                order.getOrderId(),
+                order.getTotalAmount().doubleValue()
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send email: " + e.getMessage());
+        }
+        
+        // SMS
+        try {
+            smsService.sendOrderConfirmationSMS(
+                order.getUser().getMobile(),
+                order.getOrderId(),
+                order.getTotalAmount().doubleValue()
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send SMS: " + e.getMessage());
+        }
     }
     
     private String generateTransactionId() {

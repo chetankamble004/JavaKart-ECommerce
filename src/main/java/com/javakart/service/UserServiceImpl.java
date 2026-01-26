@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
-    @Autowired
+    @Autowired(required = false) // TEMPORARY: Make it optional
     private AuthenticationManager authenticationManager;
     
     @Autowired
@@ -73,7 +73,6 @@ public class UserServiceImpl implements UserService {
         try {
             emailService.sendRegistrationEmail(savedUser.getEmail(), savedUser.getFullName());
         } catch (Exception e) {
-            // Log error but don't fail registration
             System.err.println("Failed to send registration email: " + e.getMessage());
         }
         
@@ -84,18 +83,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO loginUser(LoginDTO loginDTO) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
+            // SIMPLIFIED LOGIN - Without AuthenticationManager for now
+            User user = userRepository.findByUsername(loginDTO.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+            
+            // Manual password check
+            if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+                throw new RuntimeException("Invalid password");
+            }
+            
+            // Create simple authentication
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user.getUsername(),
+                null,
+                List.of(() -> "ROLE_" + user.getRole().name())
             );
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
-            User user = userRepository.findByUsername(loginDTO.getUsername())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-            
             UserDTO userDTO = convertToDTO(user);
             
-            // Generate JWT token
+            // Generate JWT token manually
             String token = jwtUtil.generateToken(
                 new org.springframework.security.core.userdetails.User(
                     user.getUsername(),
@@ -104,13 +112,11 @@ public class UserServiceImpl implements UserService {
                 )
             );
             
-            // Add token to response
             userDTO.setToken(token);
-            
             return userDTO;
             
         } catch (Exception e) {
-            throw new RuntimeException("Invalid username or password");
+            throw new RuntimeException("Invalid username or password: " + e.getMessage());
         }
     }
     
@@ -119,18 +125,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return convertToDTO(user);
-    }
-    
-    private UserDTO convertToDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setUserId(user.getUserId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setMobile(user.getMobile());
-        dto.setFullName(user.getFullName());
-        dto.setRole(user.getRole().name());
-        dto.setPassword(""); // Don't expose password
-        return dto;
     }
     
     @Override
@@ -175,7 +169,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
     
-    // Admin methods
     @Override
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll()
@@ -202,5 +195,17 @@ public class UserServiceImpl implements UserService {
         user.setIsActive(true);
         User unblockedUser = userRepository.save(user);
         return convertToDTO(unblockedUser);
+    }
+    
+    private UserDTO convertToDTO(User user) {
+        UserDTO dto = new UserDTO();
+        dto.setUserId(user.getUserId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setMobile(user.getMobile());
+        dto.setFullName(user.getFullName());
+        dto.setRole(user.getRole().name());
+        dto.setPassword(""); // Don't expose password
+        return dto;
     }
 }
