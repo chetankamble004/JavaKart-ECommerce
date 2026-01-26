@@ -1,77 +1,124 @@
-.App {
+/* src/styles/App.css */
+body {
+  font-family: 'Amazon Ember', 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8f9fa;
+}
+
+.min-vh-100 {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-/* Auth pages */
-.auth-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.auth-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 40px;
-  width: 100%;
-  max-width: 450px;
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
-/* Product cards */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Product Card Hover Effect */
 .product-card {
-  transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  border-color: #3b82f6;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Cart item */
-.cart-item {
-  transition: all 0.2s ease;
-}
-
-.cart-item:hover {
-  background-color: #f9fafb;
-}
-
-/* Buttons */
+/* Button Styles */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  transition: all 0.3s ease;
+  background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+  border-color: #a88734 #9c7e31 #846a29;
+  color: #111;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(to bottom, #f5d78e, #eeb933);
+  border-color: #a88734 #9c7e31 #846a29;
 }
 
-/* Badges */
-.badge-new {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+/* Navbar Custom */
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.badge-sale {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: #fff;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .auth-card {
-    padding: 30px 20px;
-  }
-  
-  .product-card {
-    margin-bottom: 20px;
-  }
+/* Card Styles */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Form Styles */
+.form-control:focus {
+  border-color: #f0c14b;
+  box-shadow: 0 0 0 0.2rem rgba(240, 193, 75, 0.25);
+}
+
+/* Alert Styles */
+.alert {
+  border-radius: 4px;
+  border: none;
+}
+
+/* Badge Styles */
+.badge {
+  font-size: 0.75em;
+  padding: 0.25em 0.6em;
+}
+
+/* Spinner */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Responsive Images */
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid #f0c14b;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

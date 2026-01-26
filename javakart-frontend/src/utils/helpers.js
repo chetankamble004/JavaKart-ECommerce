@@ -1,95 +1,75 @@
-// Format currency
-export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+// src/utils/helpers.js
+export const formatPrice = (price) => {
+  if (!price && price !== 0) return '₹0';
+  return `₹${price.toLocaleString('en-IN')}`;
 };
 
-// Format date
 export const formatDate = (dateString) => {
+  if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('en-IN', {
-    year: 'numeric',
+    day: '2-digit',
     month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: 'numeric'
   });
 };
 
-// Truncate text
+export const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 export const truncateText = (text, maxLength = 100) => {
+  if (!text) return '';
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+  return text.substr(0, maxLength) + '...';
 };
 
-// Generate order status badge
-export const getStatusBadge = (status) => {
-  const statusConfig = {
-    PENDING: { variant: 'warning', text: 'Pending' },
-    PROCESSING: { variant: 'info', text: 'Processing' },
-    SHIPPED: { variant: 'primary', text: 'Shipped' },
-    DELIVERED: { variant: 'success', text: 'Delivered' },
-    CANCELLED: { variant: 'danger', text: 'Cancelled' },
-  };
-  return statusConfig[status] || { variant: 'secondary', text: status };
+export const calculateDiscount = (originalPrice, salePrice) => {
+  if (!originalPrice || !salePrice || salePrice >= originalPrice) return 0;
+  const discount = ((originalPrice - salePrice) / originalPrice) * 100;
+  return Math.round(discount);
 };
 
-// Generate payment status badge
-export const getPaymentStatusBadge = (status) => {
-  const statusConfig = {
-    PENDING: { variant: 'warning', text: 'Pending' },
-    SUCCESS: { variant: 'success', text: 'Success' },
-    FAILED: { variant: 'danger', text: 'Failed' },
-    REFUNDED: { variant: 'info', text: 'Refunded' },
-  };
-  return statusConfig[status] || { variant: 'secondary', text: status };
+export const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
 };
 
-// Calculate total with discount
-export const calculateTotal = (items, discount = 0) => {
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const discountAmount = subtotal * (discount / 100);
-  const total = subtotal - discountAmount;
-  return { subtotal, discountAmount, total };
+export const validatePhone = (phone) => {
+  const re = /^\d{10}$/;
+  return re.test(phone);
 };
 
-// Validate email
-export const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-// Validate phone
-export const isValidPhone = (phone) => {
-  const phoneRegex = /^[0-9]{10}$/;
-  return phoneRegex.test(phone);
-};
-
-// Debounce function
-export const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
-
-// Get user initials
-export const getUserInitials = (name) => {
-  if (!name) return '?';
+export const getInitials = (name) => {
+  if (!name) return 'U';
   return name
     .split(' ')
-    .map(part => part.charAt(0))
+    .map(word => word[0])
     .join('')
     .toUpperCase()
     .substring(0, 2);
 };
 
-// Generate random ID
-export const generateId = (length = 8) => {
-  return Math.random().toString(36).substring(2, 2 + length).toUpperCase();
+export const generateOrderNumber = () => {
+  return 'ORD-' + Date.now().toString().slice(-8);
+};
+
+export const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 };

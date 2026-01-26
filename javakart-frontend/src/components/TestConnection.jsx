@@ -1,203 +1,156 @@
-import React, { useState, useEffect } from 'react';
+// src/components/TestConnection.jsx
+import React, { useState } from 'react';
+import { Button, Card, Alert, Spinner } from 'react-bootstrap';
+import { FaServer, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import { testBackend, testHealth } from '../services/api';
-import { FaCheckCircle, FaTimesCircle, FaSync, FaServer, FaDatabase, FaCode } from 'react-icons/fa';
 
 const TestConnection = () => {
-  const [status, setStatus] = useState('checking');
-  const [healthData, setHealthData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [backendStatus, setBackendStatus] = useState(null);
+  const [healthStatus, setHealthStatus] = useState(null);
+  const [loading, setLoading] = useState({ backend: false, health: false });
 
-  const checkConnection = async () => {
-    setLoading(true);
-    setStatus('checking');
-    setError(null);
-    
+  const testBackendConnection = async () => {
+    setLoading({ ...loading, backend: true });
     try {
-      // Test basic endpoint
-      const basicTest = await testBackend();
-      console.log('Basic test passed:', basicTest);
-      
-      // Test health endpoint
-      const health = await testHealth();
-      setHealthData(health);
-      
-      setStatus('connected');
-    } catch (err) {
-      console.error('Connection failed:', err);
-      setStatus('failed');
-      setError(err.message || 'Unknown error');
-    } finally {
-      setLoading(false);
+      const response = await testBackend();
+      setBackendStatus({
+        success: true,
+        data: response.data
+      });
+    } catch (error) {
+      setBackendStatus({
+        success: false,
+        error: error.message
+      });
     }
+    setLoading({ ...loading, backend: false });
   };
 
-  useEffect(() => {
-    checkConnection();
-  }, []);
+  const testHealthCheck = async () => {
+    setLoading({ ...loading, health: true });
+    try {
+      const response = await testHealth();
+      setHealthStatus({
+        success: true,
+        data: response.data
+      });
+    } catch (error) {
+      setHealthStatus({
+        success: false,
+        error: error.message
+      });
+    }
+    setLoading({ ...loading, health: false });
+  };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="p-3 bg-blue-100 rounded-xl mr-4">
-            <FaServer className="text-blue-600 text-2xl" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Backend Connection</h2>
-            <p className="text-gray-600">JavaKart Spring Boot API</p>
-          </div>
+    <Card className="shadow-sm">
+      <Card.Header className="bg-primary text-white d-flex align-items-center">
+        <FaServer className="me-2" />
+        <h5 className="mb-0">Backend Connection Test</h5>
+      </Card.Header>
+      <Card.Body>
+        <div className="mb-4">
+          <h6>API URL: {process.env.REACT_APP_API_URL || 'http://localhost:8080/api'}</h6>
+          <p className="text-muted small">Test if frontend can connect to backend</p>
         </div>
-        
-        <button
-          onClick={checkConnection}
-          disabled={loading}
-          className="flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50"
-        >
-          <FaSync className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Checking...' : 'Test Now'}
-        </button>
-      </div>
 
-      {/* Status Card */}
-      <div className={`rounded-xl p-5 mb-6 ${
-        status === 'connected' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' :
-        status === 'failed' ? 'bg-gradient-to-r from-red-50 to-rose-50 border border-red-200' :
-        'bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200'
-      }`}>
-        <div className="flex items-center">
-          <div className={`p-3 rounded-lg mr-4 ${
-            status === 'connected' ? 'bg-green-100' :
-            status === 'failed' ? 'bg-red-100' :
-            'bg-yellow-100'
-          }`}>
-            {status === 'connected' ? (
-              <FaCheckCircle className="text-green-600 text-3xl" />
-            ) : status === 'failed' ? (
-              <FaTimesCircle className="text-red-600 text-3xl" />
+        <div className="d-flex gap-3 mb-4">
+          <Button
+            variant="outline-primary"
+            onClick={testBackendConnection}
+            disabled={loading.backend}
+            className="d-flex align-items-center"
+          >
+            {loading.backend ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Testing...
+              </>
             ) : (
-              <FaSync className="text-yellow-600 text-3xl animate-spin" />
+              'Test Backend'
             )}
-          </div>
-          
-          <div className="flex-1">
-            <h3 className={`text-xl font-bold ${
-              status === 'connected' ? 'text-green-800' :
-              status === 'failed' ? 'text-red-800' :
-              'text-yellow-800'
-            }`}>
-              {status === 'connected' ? '✅ Backend Connected Successfully!' :
-               status === 'failed' ? '❌ Backend Connection Failed' :
-               '⏳ Connecting to Backend...'}
-            </h3>
-            <p className={`mt-1 ${
-              status === 'connected' ? 'text-green-700' :
-              status === 'failed' ? 'text-red-700' :
-              'text-yellow-700'
-            }`}>
-              {status === 'connected' ? 'Spring Boot API is responding correctly on port 8080' :
-               status === 'failed' ? `Error: ${error || 'Cannot reach backend server'}` :
-               'Attempting to connect to JavaKart backend...'}
-            </p>
-          </div>
+          </Button>
+          <Button
+            variant="outline-success"
+            onClick={testHealthCheck}
+            disabled={loading.health}
+            className="d-flex align-items-center"
+          >
+            {loading.health ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Testing...
+              </>
+            ) : (
+              'Test Health'
+            )}
+          </Button>
         </div>
-      </div>
 
-      {/* Connection Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gray-50 p-4 rounded-xl">
-          <div className="flex items-center mb-2">
-            <FaCode className="text-gray-500 mr-2" />
-            <span className="text-sm font-medium text-gray-700">Frontend</span>
-          </div>
-          <code className="text-sm font-mono bg-white px-2 py-1 rounded border">localhost:3000</code>
-        </div>
-        
-        <div className="bg-gray-50 p-4 rounded-xl">
-          <div className="flex items-center mb-2">
-            <FaServer className="text-gray-500 mr-2" />
-            <span className="text-sm font-medium text-gray-700">Backend API</span>
-          </div>
-          <code className="text-sm font-mono bg-white px-2 py-1 rounded border">localhost:8080/api</code>
-        </div>
-        
-        <div className="bg-gray-50 p-4 rounded-xl">
-          <div className="flex items-center mb-2">
-            <FaDatabase className="text-gray-500 mr-2" />
-            <span className="text-sm font-medium text-gray-700">Database</span>
-          </div>
-          <code className="text-sm font-mono bg-white px-2 py-1 rounded border">MySQL javakart_db</code>
-        </div>
-        
-        <div className="bg-gray-50 p-4 rounded-xl">
-          <div className="flex items-center mb-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-sm font-medium text-gray-700">Status</span>
-          </div>
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-            status === 'connected' ? 'bg-green-100 text-green-800' :
-            status === 'failed' ? 'bg-red-100 text-red-800' :
-            'bg-yellow-100 text-yellow-800'
-          }`}>
-            {status === 'connected' ? 'Connected' :
-             status === 'failed' ? 'Failed' : 'Checking'}
-          </span>
-        </div>
-      </div>
+        {backendStatus && (
+          <Alert variant={backendStatus.success ? 'success' : 'danger'} className="d-flex align-items-center">
+            {backendStatus.success ? (
+              <FaCheckCircle className="me-2 fs-4" />
+            ) : (
+              <FaExclamationCircle className="me-2 fs-4" />
+            )}
+            <div className="flex-grow-1">
+              <strong>Backend Test:</strong> {backendStatus.success ? 'Connected Successfully' : 'Connection Failed'}
+              {backendStatus.success && backendStatus.data && (
+                <div className="small mt-1">
+                  <div className="bg-dark text-light p-2 rounded">
+                    <pre className="mb-0">{JSON.stringify(backendStatus.data, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
+              {!backendStatus.success && (
+                <div className="small mt-1">Error: {backendStatus.error}</div>
+              )}
+            </div>
+          </Alert>
+        )}
 
-      {/* Response Data */}
-      {healthData && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
-          <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center">
-            <FaDatabase className="mr-2" />
-            Backend Health Status
-          </h3>
-          <div className="bg-white rounded-lg p-4 border">
-            <pre className="text-sm text-gray-800 overflow-x-auto">
-{`{
-  "status": "${healthData.status}",
-  "service": "${healthData.service}",
-  "version": "${healthData.version}",
-  "database": "${healthData.database}",
-  "timestamp": "${healthData.timestamp}"
-}`}
-            </pre>
-          </div>
-        </div>
-      )}
+        {healthStatus && (
+          <Alert variant={healthStatus.success ? 'success' : 'warning'} className="d-flex align-items-center">
+            {healthStatus.success ? (
+              <FaCheckCircle className="me-2 fs-4" />
+            ) : (
+              <FaExclamationCircle className="me-2 fs-4" />
+            )}
+            <div className="flex-grow-1">
+              <strong>Health Check:</strong> {healthStatus.success ? 'Backend is Healthy' : 'Health Check Failed'}
+              {healthStatus.success && healthStatus.data && (
+                <div className="small mt-1">
+                  <div className="bg-dark text-light p-2 rounded">
+                    <pre className="mb-0">{JSON.stringify(healthStatus.data, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
+              {!healthStatus.success && (
+                <div className="small mt-1">Error: {healthStatus.error}</div>
+              )}
+            </div>
+          </Alert>
+        )}
 
-      {/* Quick Fix Guide */}
-      {status === 'failed' && (
-        <div className="mt-6 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-5 border border-orange-200">
-          <h3 className="text-lg font-bold text-orange-900 mb-3">🚨 Immediate Fix Required</h3>
-          <div className="space-y-3">
-            <div className="flex items-start">
-              <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center mr-3 mt-0.5">1</div>
-              <div>
-                <p className="font-medium text-orange-800">Restart Backend</p>
-                <p className="text-sm text-orange-700">Run in backend directory: <code className="bg-orange-100 px-2 py-1 rounded">mvn spring-boot:run</code></p>
-              </div>
-            </div>
-            
-            <div className="flex items-start">
-              <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center mr-3 mt-0.5">2</div>
-              <div>
-                <p className="font-medium text-orange-800">Check Port 8080</p>
-                <p className="text-sm text-orange-700">Open: <a href="http://localhost:8080/api/test" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">http://localhost:8080/api/test</a></p>
-              </div>
-            </div>
-            
-            <div className="flex items-start">
-              <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center mr-3 mt-0.5">3</div>
-              <div>
-                <p className="font-medium text-orange-800">Verify CORS Config</p>
-                <p className="text-sm text-orange-700">Make sure CorsConfig.java is in the correct package</p>
-              </div>
-            </div>
-          </div>
+        {!backendStatus && !healthStatus && (
+          <Alert variant="info">
+            Click buttons above to test backend connection. Make sure backend is running on port 8080.
+          </Alert>
+        )}
+
+        <div className="mt-4 p-3 bg-light rounded">
+          <h6>Troubleshooting Tips:</h6>
+          <ul className="small mb-0">
+            <li>Ensure backend server is running: <code>java -jar target/javakart-backend-0.0.1-SNAPSHOT.jar</code></li>
+            <li>Check if MySQL database is running on port 3306</li>
+            <li>Verify CORS is configured in backend</li>
+            <li>Check browser console for detailed errors (F12)</li>
+          </ul>
         </div>
-      )}
-    </div>
+      </Card.Body>
+    </Card>
   );
 };
 

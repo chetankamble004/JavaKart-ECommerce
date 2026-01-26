@@ -1,45 +1,49 @@
-import api from './api';
+// src/services/cartService.js
+import { cartAPI } from './api';
 
 export const cartService = {
-  // Get cart
   getCart: async () => {
-    const response = await api.get('/cart');
-    return response.data;
+    try {
+      const response = await cartAPI.get();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Add to cart
-  addToCart: async (cartItem) => {
-    const response = await api.post('/cart/items', cartItem);
-    return response.data;
+  addToCart: async (item) => {
+    try {
+      const response = await cartAPI.addItem(item);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Update cart item
-  updateCartItem: async (itemId, cartItem) => {
-    const response = await api.put(`/cart/items/${itemId}`, cartItem);
-    return response.data;
+  updateCartItem: async (itemId, data) => {
+    try {
+      const response = await cartAPI.updateItem(itemId, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Remove from cart
-  removeFromCart: async (itemId) => {
-    const response = await api.delete(`/cart/items/${itemId}`);
-    return response.data;
+  removeCartItem: async (itemId) => {
+    try {
+      const response = await cartAPI.removeItem(itemId);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Clear cart
   clearCart: async () => {
-    const response = await api.delete('/cart');
-    return response.data;
-  },
-
-  // Get cart count
-  getCartCount: async () => {
-    const cart = await cartService.getCart();
-    return cart.cartItems?.length || 0;
-  },
-
-  // Get cart total
-  getCartTotal: async () => {
-    const cart = await cartService.getCart();
-    return cart.totalAmount || 0;
-  },
+    try {
+      const response = await cartAPI.clear();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };

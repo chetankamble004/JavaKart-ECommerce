@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "JavaKart",
+  "name": "JavaKart E-Commerce Platform",
+  "description": "Full-stack online shopping platform inspired by Amazon/Flipkart",
   "icons": [
     {
       "src": "favicon.ico",

@@ -1,51 +1,40 @@
-import api from './api';
+// src/services/orderService.js
+import { orderAPI } from './api';
 
 export const orderService = {
-  // Create order
   createOrder: async () => {
-    const response = await api.post('/orders');
-    return response.data;
+    try {
+      const response = await orderAPI.create();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Get all orders for current user
   getOrders: async () => {
-    const response = await api.get('/orders');
-    return response.data;
+    try {
+      const response = await orderAPI.getAll();
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Get order by ID
-  getOrderById: async (orderId) => {
-    const response = await api.get(`/orders/${orderId}`);
-    return response.data;
+  getOrderById: async (id) => {
+    try {
+      const response = await orderAPI.getById(id);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Cancel order
-  cancelOrder: async (orderId) => {
-    const response = await api.put(`/orders/${orderId}/cancel`);
-    return response.data;
-  },
-
-  // Get all orders (admin)
-  getAllOrders: async () => {
-    const response = await api.get('/admin/orders');
-    return response.data;
-  },
-
-  // Update order status (admin)
-  updateOrderStatus: async (orderId, status) => {
-    const response = await api.put(`/admin/orders/${orderId}/status?status=${status}`);
-    return response.data;
-  },
-
-  // Get orders by user (admin)
-  getOrdersByUser: async (userId) => {
-    const response = await api.get(`/admin/orders/user/${userId}`);
-    return response.data;
-  },
-
-  // Process refund (admin)
-  processRefund: async (orderId) => {
-    const response = await api.post(`/admin/orders/${orderId}/refund`);
-    return response.data;
-  },
+  cancelOrder: async (id) => {
+    try {
+      const response = await orderAPI.cancel(id);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 };

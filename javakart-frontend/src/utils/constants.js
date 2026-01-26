@@ -1,57 +1,53 @@
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
-
-export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  REGISTER: '/register',
-  PRODUCTS: '/products',
-  PRODUCT_DETAIL: '/products/:id',
-  CART: '/cart',
-  CHECKOUT: '/checkout',
-  ORDERS: '/orders',
-  PROFILE: '/profile',
-  ADMIN: '/admin',
-  ADMIN_DASHBOARD: '/admin/dashboard',
-  ADMIN_PRODUCTS: '/admin/products',
-  ADMIN_ORDERS: '/admin/orders',
-  ADMIN_USERS: '/admin/users',
-};
+// src/utils/constants.js
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 export const ORDER_STATUS = {
   PENDING: 'PENDING',
   PROCESSING: 'PROCESSING',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',
-  CANCELLED: 'CANCELLED',
+  CANCELLED: 'CANCELLED'
+};
+
+export const ORDER_STATUS_COLORS = {
+  PENDING: 'warning',
+  PROCESSING: 'info',
+  SHIPPED: 'primary',
+  DELIVERED: 'success',
+  CANCELLED: 'danger'
 };
 
 export const PAYMENT_METHODS = {
-  COD: 'COD',
-  ONLINE: 'ONLINE',
-  RAZORPAY: 'RAZORPAY',
-};
-
-export const PAYMENT_STATUS = {
-  PENDING: 'PENDING',
-  SUCCESS: 'SUCCESS',
-  FAILED: 'FAILED',
-  REFUNDED: 'REFUNDED',
-};
-
-export const USER_ROLES = {
-  USER: 'USER',
-  ADMIN: 'ADMIN',
+  COD: 'Cash on Delivery',
+  CARD: 'Credit/Debit Card',
+  ONLINE: 'Online Payment',
+  UPI: 'UPI',
+  WALLET: 'Wallet'
 };
 
 export const CATEGORIES = [
-  { id: 1, name: 'Electronics', icon: '💻' },
-  { id: 2, name: 'Fashion', icon: '👕' },
-  { id: 3, name: 'Home & Kitchen', icon: '🏠' },
-  { id: 4, name: 'Books', icon: '📚' },
-  { id: 5, name: 'Beauty', icon: '💄' },
-  { id: 6, name: 'Sports', icon: '⚽' },
-  { id: 7, name: 'Toys', icon: '🧸' },
-  { id: 8, name: 'Automotive', icon: '🚗' },
+  'Electronics',
+  'Fashion',
+  'Home & Kitchen',
+  'Books',
+  'Beauty',
+  'Sports',
+  'Toys',
+  'Automotive'
 ];
 
-export const CURRENCY = '₹';
+export const PRODUCT_SORT_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'rating', label: 'Rating' },
+  { value: 'name', label: 'Name A-Z' }
+];
+
+export const RATING_COLORS = {
+  1: '#ff6b6b',
+  2: '#ffa726',
+  3: '#ffee58',
+  4: '#9ccc65',
+  5: '#66bb6a'
+};
